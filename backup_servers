@@ -1,0 +1,449 @@
+#!/usr/bin/env bash
+#################################################################################
+#
+# NB 22.01.12
+# INTERNET => LOCAL BACKUP
+#
+#################################################################################
+
+#--------------------------------------
+# Options
+#--------------------------------------
+BACKUP_DIR=/opt/backups
+
+CONN_TIMEOUT=10 # seconds
+RUN_TIMEOUT=0 # seconds
+PARALLEL=1
+DU=0
+SSH_OPT=""
+
+SERVERS=""
+DIRS=""
+RSYNC_OPT=""
+
+NAME=`basename "$0"`
+LOCK="/var/run/$NAME.lock"
+DEBUG=0
+VERBOSE=0
+DATE=`date +%Y%m%d-%H%M%S`
+DRY_RUN=0
+
+#--------------------------------------
+# Functions
+#--------------------------------------
+usage() {
+echo "
+=head1 NAME
+
+${NAME}
+
+=head1 SYNOPSIS
+
+Backup a list of directories combined with a list of directories
+
+  --conf          Config file containing environment variables, Default:
+    * BACKUP_DIR=$BACKUP_DIR
+    * RSYNC_OPT=$RSYNC_OPT
+    * SSH_OPT=$SSH_OPT
+    * PARALLEL=$PARALLEL
+    * CONN_TIMEOUT=$CONN_TIMEOUT
+    * DIRS=$DIRS
+    * SERVERS=$SERVERS
+    Need to be the first argument.
+
+  --servers       Servers separated by a space
+  --dirs          Dirs separated by a space
+  --backup-dir    Default: $BACKUP_DIR
+
+  --conn-timeout  Default: $CONN_TIMEOUT
+  --run-timeout   Default: $RUN_TIMEOUT
+  --parallel      Default: $PARALLEL
+
+  --rsync-opt     Added to RSYNC_OPT from config file
+  -n,--dry-run
+  --ssh-opt
+
+  --[no-]du       Default: $DU
+  --log2csv       [LOG_FILE|STDIN], Transform log into csv
+  --log2err       [LOG_FILE|STDIN], Extract errors from log
+
+  -v, --verbose   Default; $VERBOSE
+      --debug     Default: $DEBUG, don't run rsync. Print rsync command to be run if DEBUG>1
+  -h, --help      Print this help
+
+=head1 EXAMPLES
+
+Backup myserser:/etc into /opt/backup:
+
+  $NAME --servers myserser --dir /etc --backup-dir /opt/backup
+
+Backup a list of directories and servers from a conf file
+
+  $NAME --conf /etc/$NAME.conf
+
+Test a config:
+
+  $NAME --conf /etc/$NAME.conf --debug
+
+=head1 DESCRIPTION
+
+Long description
+
+=head1 LICENSE
+
+Copyright (C) 2014 Nicolas Boisselier
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+See <http://www.gnu.org/licenses/>.
+
+=head1 AUTHOR
+
+Nicolas Boisselier nicolas.boisselier@gmail.com
+"
+}
+
+check_lock() {
+  [ "$DEBUG" == "0" ] || return 0
+  [ "$DRY_RUN" == "0" ] || return 0
+
+  declare lock="$@"
+
+	if [ -e "$lock" ]; then
+
+    declare pid=$(cat $lock)
+		echo "$NAME: Lock already exists: $lock (pid: $pid)" 1>&2
+
+		# Bad end !
+    [ -z "$pid" ] && echo EMPTY
+    [ -z "$pid" ] || ps -o pid=|grep -m1 -q "^ *${pid}$" || rm -v $lock
+
+	fi
+
+	if [ -e "$lock" ]; then
+		# Too long !
+		find "$lock" -type f -mtime +7 -exec bash -c "rm {}; [ -z '$pid' ] || kill -9 $pid" \;
+  fi
+
+	if [ -e "$lock" ]; then
+    declare pid=$(cat $lock)
+		echo "WARN: Process still running: pid=$pid ps="$(ps uw -p $pid 2>/dev/null| tail -1) 1>&2
+		return 1
+	fi
+
+	echo $$ > "$lock" || return 2
+
+  return 0
+
+}
+
+is_locahost() {
+  case $1 in
+    127.0.0.1|localhost*) return 0 ;;
+    `hostname`) return 0 ;;
+    `hostname -f`) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+backup_dirs() {
+
+	declare s=$1; shift
+
+  #
+  # Check conn / dirs
+  #
+  declare dirs=$(test_dirs $s)
+
+  if [ "$?" != "0" ]; then
+    echo "$s: connection failed"
+    return 1
+  fi
+
+  if [ -z "$dirs" ]; then
+    echo "$s: no directories found"
+    return 1
+  fi
+
+  echo "$s: found: "$(echo "$dirs")
+
+  #
+  # Check Lock
+  #
+  declare lock="$BACKUP_DIR/$s/$NAME.lock"
+	if [ "$DEBUG" == "0" -a "$DRY_RUN" == "0" ] && [ -e "$lock" ]; then
+		echo "$s: ERR: $lock already exists!"
+		return 2
+	fi
+
+  #
+  # Create backup dir
+  #
+	if [ "$DEBUG" == "0" ] && ! [ -e $BACKUP_DIR/$s ] && ! mkdir -p $BACKUP_DIR/$s &>/dev/null; then
+		echo "$s: ERR: can't create $BACKUP_DIR/$s"
+		return 5
+	fi
+
+  #
+  # Create Lock
+  #
+	if [ "$DEBUG" == "0" -a "$DRY_RUN" == "0" ]; then
+    if ! echo $$ > "$lock"; then
+      echo "$s: ERR: Can't create $lock"
+      return 2
+    fi
+	fi
+
+  #
+  # Dirs
+  #
+  declare ssh_dirs="" d="" ifs=$IFS
+
+  #
+  # dir -> server:dir
+  #
+  IFS=$'\n'
+  for d in $dirs; do
+    d=`echo "$d"|sed 's/ /\\\\ /g'`
+    if is_locahost $s; then
+      ssh_dirs="$ssh_dirs \"$d\""
+    else
+      ssh_dirs="$ssh_dirs $s:\"$d\""
+    fi
+    shift
+  done
+  IFS=$ifs
+
+	declare cmd="$RSYNC $ssh_dirs \"$BACKUP_DIR/$s/\""
+  [ $RUN_TIMEOUT -gt 0 ] && cmd="perl -e 'alarm $RUN_TIMEOUT; exec @ARGV' -- $cmd"
+
+  if [ "$DEBUG" -gt "0"  ]; then
+    if [ "$DEBUG" -gt "1" ]; then
+      echo "$s: $cmd"
+    fi
+
+  else
+    declare start=`date +%s`
+	  eval $cmd 2>&1 | perl -pe "BEGIN{$|=1} s/^(.)/$s: \$1/"
+    echo "$s: rsync: "$((`date +%s`-$start))" seconds"
+
+  fi
+
+  #
+  # Remove lock
+  #
+	if [ "$DRY_RUN" == "0" -a -e "$lock" ]; then
+    echo $s: $(rm -v "$lock")
+  fi
+
+}
+export -f backup_dirs
+
+test_dirs() {
+  declare s=$1; shift
+  [ -z "$DIRS" ] && return 1
+
+  declare cmd="ssh $SSH_OPT -q -o ConnectTimeout=$CONN_TIMEOUT $s"
+  is_locahost $s && cmd="bash -c"
+
+  declare exit=0; [ $DEBUG -gt 0 -o $DRY_RUN -gt 0 ] && exit=1
+  #exit=0
+  #echo "$exit: <$cmd>" 1>&2
+  $cmd \
+    "( \
+ls -1d $DIRS; \
+if [ $exit -gt 0 ]; then true; \
+elif [ -x /usr/bin/dpkg ]; then /usr/bin/dpkg --get-selections &> /etc/dpkg-get-selections.backup; \
+elif [ -x /opt/local/bin/port ]; then /opt/local/bin/port installed &> /etc/port-installed.backup; \
+fi; \
+exit 0; \
+)" 2>/dev/null
+
+  return $?
+}
+
+parallelize() {
+  declare pid=""
+  while [ $# -gt 0 ] ; do
+    jobcnt=(`jobs -p`)
+    if [ ${#jobcnt[@]} -lt $PARALLEL ] ; then
+      #$1
+      $1 &
+      pid=$!
+      shift  
+    fi
+  done
+  trap "{ kill -SIGKILL $pid ; exit 0; }" SIGINT
+  wait
+}
+
+alarm() { perl -e 'alarm shift; exec @ARGV' -- $@; }
+export -f alarm
+
+log2err() {
+  exec perl -ne 'print if /(: ERR:|connection failed|no directories|Alarm clock\s+perl)/' $@
+}
+
+log2csv() {
+  declare total=0
+  [ "$1" == "_total_" ] && total=1 && shift
+  exec perl -ne '
+BEGIN { %h = (); $total = shift @ARGV; $| = 1; }
+
+  print if $total;
+
+  /^(.*?): Number of files: (\d+)/ and $h{$1}{files_total} = $2;
+  /^(.*?): Number of files transferred: (\d+)/ and $h{$1}{files_transfer} = $2;
+
+  /^(.*?): Total file size: (\d+)/ and $h{$1}{bytes_total} = $2;
+  /^(.*?): Total transferred file size: (\d+)/ and $h{$1}{bytes_transfer} = $2;
+  /^(.*?): rsync: (\d+) sec/ and $h{$1}{time} = $2;
+
+  $argv = $ARGV;
+
+END {
+
+  @f = qw/files_transfer files_total bytes_transfer bytes_total time/;
+  %tot = (map{$_ => 0} @f);
+  print join("\t","host",@f)."\n" unless $total;
+
+  while (my ($h,$d) = each(%h)) {
+
+    if ($total) {
+      for (@f) { $tot{$_} += $d->{$_}; }
+    } else {
+      print join("\t",$h,map{$d->{$_}} @f)."\n";
+    }
+
+  }
+
+  print "\n"
+    ."-------------------------------------------\n"
+    ."- Files transfered / total: ".$tot{files_transfer}." / ".$tot{files_total}."\n" 
+    ."- Bytes transfered / total: ".$tot{bytes_transfer}." / ".$tot{bytes_total}."\n" 
+  if $total;
+
+}
+' $total $@
+}
+
+bye() {
+  [ "$DEBUG" == "0" -a "$DRY_RUN" == "0" ] && [ -f "$LOCK" ] && rm -v "$LOCK"
+}
+
+#--------------------------------------
+# Args
+#--------------------------------------
+
+RSYNC="rsync -au --links --force --numeric-ids --relative --devices --stats"
+while [ $# -gt 0 ]; do
+  case "$1" in
+
+    --conf) shift; . "$1" ;;
+    --servers) shift; SERVERS="$1" ;;
+    --dirs) shift; DIRS="$1" ;;
+    --backup-dir) shift; BACKUP_DIR="$1" ;;
+    --log2csv) shift; log2csv $@ ;;
+    --log2err) shift; log2err $@ ;;
+
+    --conn-timeout) shift; CONN_TIMEOUT=$1 ;;
+    --run-timeout) shift; RUN_TIMEOUT=$1 ;;
+    --parallel) shift; PARALLEL=$1 ;;
+
+    --ssh-opt) shift; SSH_OPT="$1" ;;
+    --rsync-opt) shift; RSYNC="$RSYNC $1" ;;
+    --dry-run|-n) DRY_RUN=1; RSYNC="$RSYNC --dry-run" ;;
+    --du) DU="1" ;;
+    --no-du) DU="0" ;;
+
+    -*help|-h) usage | pod2text --width 250; exit 0 ;;
+    --man) usage | pod2man | man -l -; exit 0 ;;
+    --verbose|-v) VERBOSE=$(($VERBOSE+1)) ;;
+    --debug) DEBUG=$(($DEBUG+1)) ;;
+
+    *) echo "$NAME: Unknow option: $1!"; exit -1; ;;
+
+  esac
+  shift
+done
+
+[ -z "$SSH_OPT" ] || SSH_OPT=" $SSH_OPT"
+SSH_OPT="-oBatchMode=yes$SSH_OPT"
+
+RSYNC="$RSYNC -e 'ssh $SSH_OPT'"
+[ -z "$RSYNC_OPT" ] || RSYNC="$RSYNC $RSYNC_OPT"
+
+[ "$VERBOSE" -gt 0 ] && RSYNC="$RSYNC $(seq $VERBOSE | xargs -n1 -IZ echo -v)"
+SERVERS=$(echo $SERVERS)
+DIRS=$(echo $DIRS)
+
+if [ "$DEBUG" -gt 2 ]; then
+    echo "
+RSYNC=\"$RSYNC\"
+
+SSH_OPT=\"$SSH_OPT\"
+
+CONN_TIMEOUT=\"$CONN_TIMEOUT\"
+
+PARALLEL=\"$PARALLEL\"
+
+DIRS=\"$DIRS\"
+
+SERVERS=\"$SERVERS\"
+"
+  exit 0
+fi
+
+#--------------------------------------
+# MAIN
+#--------------------------------------
+([ ! -z "$BACKUP_DIR" ] && cd "$BACKUP_DIR") || exit 1
+declare start=`date +%s`
+declare count_server=0
+declare cmds=""
+
+#check_lock $LOCK || exit
+
+for s in $SERVERS; do
+
+  count_server=$(($count_server+1))
+
+  cmds="$cmds \"backup_dirs $s\""
+
+done
+
+echo "-------------------------------------------"
+echo "- Start: $(date +'%F %T'), $count_server servers, $PARALLEL parallel, $CONN_TIMEOUT sec conn timeout, $RUN_TIMEOUT sec run timeout"
+echo "- Backup directory: $BACKUP_DIR"
+echo "-------------------------------------------"
+
+if [ ! -z "$cmds" ]; then
+  eval parallelize $cmds | log2csv _total_
+fi
+
+#echo
+#echo "-------------------------------------------"
+echo "- End: "$((`date +%s`-$start))" seconds, $(date +'%F %T')"
+echo "-------------------------------------------"
+
+#--------------------------------------
+# Report
+#--------------------------------------
+if [ ! -z "$SERVERS" ] && [ "$DU" == "1" ]; then
+
+  echo
+  echo "-------------------------------------------"
+  echo "- Report $BACKUP_DIR/ ($count_server servers)"
+  echo "-------------------------------------------"
+  cd "$BACKUP_DIR"
+  du -sh --total --dereference-args $SERVERS
+fi
+
+#--------------------------------------
+# Bye!
+#--------------------------------------
+bye
+
+exit 0
