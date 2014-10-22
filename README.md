@@ -1,4 +1,4 @@
 puppet-riofs
 ============
 
-Wrapper for rsync, parallelize backup
+Wrapper for rsync, parallelize backup.
