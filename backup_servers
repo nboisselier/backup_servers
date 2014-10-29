@@ -111,10 +111,11 @@ check_lock() {
   [ "$DRY_RUN" == "0" ] || return 0
 
   declare lock="$@"
+  declare pid=""
 
 	if [ -e "$lock" ]; then
 
-    declare pid=$(cat $lock)
+    pid=$(cat $lock)
 		echo "$NAME: Lock already exists: $lock (pid: $pid)" 1>&2
 
 		# Bad end !
@@ -129,7 +130,6 @@ check_lock() {
   fi
 
 	if [ -e "$lock" ]; then
-    declare pid=$(cat $lock)
 		echo "WARN: Process still running: pid=$pid ps="$(ps uw -p $pid 2>/dev/null| tail -1) 1>&2
 		return 1
 	fi
@@ -156,7 +156,8 @@ backup_dirs() {
   #
   # Check conn / dirs
   #
-  declare dirs=$(test_dirs $s)
+  declare dirs=""
+  dirs=$(test_dirs $s)
 
   if [ "$?" != "0" ]; then
     echo "$s: connection failed"
