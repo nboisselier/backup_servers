@@ -3,7 +3,7 @@ backup_servers
 
 ## Synopsis
 
-Wrapper for rsync, parallelize backup.
+Wrapper for rsync, parallelize backup. Used to backup 200 servers.
 
 This script is written in bash.
 
