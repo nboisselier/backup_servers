@@ -22,7 +22,7 @@ Or arguments on the command line:
 
   `backup_servers --backup-dir /opt/backups --dirs /etc --servers my.server.com`
   
-The variable DIRS is use by runing `ls -1 DIRS` on the server via ssh.
+The variable DIRS is used by runing `ls -1 DIRS` on the server via ssh.
 Only exiting directories will be listed wich permit you to have one global directory policy for all servers.
 You can use as well any `$(shell command)` to get the list of directories passed to `ls`.
 
@@ -34,7 +34,7 @@ You can use as well any `$(shell command)` to get the list of directories passed
   BACKUP_DIR=/opt/backups
   PARALLEL=4
   SERVERS=$(mysql sys -NBe "SELECT host FROM server")
-  DIRS='$(if [ -e /etc/backup_paths ]; then cat /etc/backup_paths; else echo "/etc /home")'
+  DIRS='$(if [ -e /etc/backup_paths ]; then cat /etc/backup_paths; else echo "/etc /home"; fi)'
   RSYNC_OPT="-zau --rsync-path="nice +19 rsync" --bwlimit 1024"
 
 ```
