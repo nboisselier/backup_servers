@@ -5,6 +5,9 @@ backup_servers
 
 Wrapper for rsync, parallelize backup.
 
+This script is written in bash.
+
+## Config
 It use a simple bash config file (eg: /opt/backups/backup.conf):
 
 - SERVERS=''
