@@ -36,10 +36,10 @@ RSYNC_OPT="-zau --rsync-path="nice +19 rsync" --bwlimit 1024"
 
 You can then test your config with arguments to change values of the config file:
 
-  backup_servers --conf /opt/backups/backup.conf --servers macbook.brighton.loc --dirs /private/etc --debug
+  `backup_servers --conf /opt/backups/backup.conf --servers macbook.brighton.loc --dirs /private/etc --debug`
   
 Or run the backup in rsync dry mode:
   
-  backup_servers --conf /opt/backups/backup.conf -n
+  `backup_servers --conf /opt/backups/backup.conf -n`
   
 
