@@ -63,12 +63,13 @@ Backup a list of directories combined with a list of directories
   -n,--dry-run
   --ssh-opt
 
-  --[no-]du       Default: $DU
+  --[no-]du       Print directories size by server (default: $DU)
   --log2csv       [LOG_FILE|STDIN], Transform log into csv
   --log2err       [LOG_FILE|STDIN], Extract errors from log
 
   -v, --verbose   Default; $VERBOSE
-      --debug     Default: $DEBUG, don't run rsync. Print rsync command to be run if DEBUG>1
+      --debug     Default: $DEBUG, don't run rsync. Print directories found per servers.
+                  Print rsync command to be run if DEBUG>1
   -h, --help      Print this help
 
 =head1 EXAMPLES
@@ -400,7 +401,7 @@ fi
 #--------------------------------------
 # MAIN
 #--------------------------------------
-([ ! -z "$BACKUP_DIR" ] && cd "$BACKUP_DIR") || exit 1
+([ -n "$BACKUP_DIR" ] && cd "$BACKUP_DIR") || exit 1
 declare start=`date +%s`
 declare count_server=0
 declare cmds=""
@@ -420,7 +421,7 @@ echo "- Start: $(date +'%F %T'), $count_server servers, $PARALLEL parallel, $CON
 echo "- Backup directory: $BACKUP_DIR"
 echo "-------------------------------------------"
 
-if [ ! -z "$cmds" ]; then
+if [ -n "$cmds" ]; then
   eval parallelize $cmds | log2csv _total_
 fi
 
@@ -432,7 +433,7 @@ echo "-------------------------------------------"
 #--------------------------------------
 # Report
 #--------------------------------------
-if [ ! -z "$SERVERS" ] && [ "$DU" == "1" ]; then
+if [ -n "$SERVERS" ] && [ "$DU" == "1" ]; then
 
   echo
   echo "-------------------------------------------"
