@@ -19,18 +19,20 @@ It use a simple bash config file (eg: /opt/backups/backup.conf):
 - RSYNC_OPT=''
 
 Or arguments on the command line:
-  backup_servers --backup-dir /opt/backups --dirs /etc --servers my.server.com
+
+  `backup_servers --backup-dir /opt/backups --dirs /etc --servers my.server.com`
   
 The variable DIRS is use by runing `ls -1 DIRS` on the server via ssh.
-This permit you to use any shell command to get the list of directories.
+Only exiting directories will be listed wich permit you to have one global directory policy for all servers.
+It permit as weel you to use any shell command to get the list of directories.
 
 ## Example
 
 #/opt/backups/backup.conf
 BACKUP_DIR=/opt/backups
 SERVERS=$(mysql sys -NBe "SELECT host FROM server")
-DIRS='if [ -e /etc/backup_paths ]; then cat /etc/backup_paths; else echo "/etc /home"'
-RSYNC_OPT="--rsync-path="nice +19 rsync" --bwlimit 1024"
+DIRS='$(if [ -e /etc/backup_paths ]; then cat /etc/backup_paths; else echo "/etc /home")'
+RSYNC_OPT="-zau --rsync-path="nice +19 rsync" --bwlimit 1024"
 
 You can then test your config with arguments to change values of the config file:
 
