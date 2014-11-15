@@ -17,6 +17,9 @@ It use a simple bash config file (eg: /opt/backups/backup.conf):
 - CONN_TIMEOUT=''
 - RSYNC_OPT=''
 
+Or arguments on the command line:
+  backup_servers --dirs /etc --servers my.server.com
+  
 The variable DIRS is use by runing `ls -1 DIRS` on the server via ssh.
 This permit you to use any shell command to get the list of directories.
 
