@@ -223,7 +223,7 @@ backup_dirs() {
 
   if [ "$DEBUG" -gt "0"  ]; then
     if [ "$DEBUG" -gt "1" ]; then
-      echo "$s: $cmd"
+      printf '%s\n\n' "$s: $cmd"
     fi
 
   else
