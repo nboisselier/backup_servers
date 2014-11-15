@@ -29,7 +29,7 @@ It permit as weel you to use any shell command to get the list of directories.
 ## Example
 
 ```bash
-  /opt/backups/backup.conf:
+  # /opt/backups/backup.conf:
   
   BACKUP_DIR=/opt/backups
   SERVERS=$(mysql sys -NBe "SELECT host FROM server")
