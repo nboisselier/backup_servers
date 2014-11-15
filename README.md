@@ -28,6 +28,7 @@ It permit as weel you to use any shell command to get the list of directories.
 
 ## Example
 
+```bash
   /opt/backups/backup.conf:
   
   BACKUP_DIR=/opt/backups
@@ -35,6 +36,7 @@ It permit as weel you to use any shell command to get the list of directories.
   DIRS='$(if [ -e /etc/backup_paths ]; then cat /etc/backup_paths; else echo "/etc /home")'
   RSYNC_OPT="-zau --rsync-path="nice +19 rsync" --bwlimit 1024"
 
+```
 You can then test your config with arguments to change values of the config file:
 
   `backup_servers --conf /opt/backups/backup.conf --servers macbook.brighton.loc --dirs /private/etc --debug`
