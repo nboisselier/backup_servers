@@ -24,7 +24,7 @@ Or arguments on the command line:
   
 The variable DIRS is use by runing `ls -1 DIRS` on the server via ssh.
 Only exiting directories will be listed wich permit you to have one global directory policy for all servers.
-You can use as well any $(shell command) to get the list of directories.
+You can use as well any `$(shell command)` to get the list of directories passed to `ls`.
 
 ## Example
 
