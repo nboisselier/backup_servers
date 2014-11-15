@@ -35,7 +35,7 @@ You can use as well any `$(shell command)` to get the list of directories passed
   PARALLEL=4
   SERVERS=$(mysql sys -NBe "SELECT host FROM server")
   DIRS='$(if [ -e /etc/backup_paths ]; then cat /etc/backup_paths; else echo "/etc /home"; fi)'
-  RSYNC_OPT="-zau --rsync-path="nice +19 rsync" --bwlimit 1024"
+  RSYNC_OPT="-zau --rsync-path='nice +19 rsync' --bwlimit 1024"
 
 ```
 You can then test your config with arguments to change values of the config file:
