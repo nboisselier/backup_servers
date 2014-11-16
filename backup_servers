@@ -9,17 +9,16 @@
 #--------------------------------------
 # Options
 #--------------------------------------
-BACKUP_DIR=/opt/backups
-
-CONN_TIMEOUT=10 # seconds
-RUN_TIMEOUT=0 # seconds
-PARALLEL=1
-DU=0
-SSH_OPT=""
-
+BACKUP_DIR=""
 SERVERS=""
 DIRS=""
+PARALLEL=1
+RSYNC="rsync -au --links --force --numeric-ids --relative --devices --stats"
 RSYNC_OPT=""
+SSH_OPT=""
+CONN_TIMEOUT=10 # seconds
+RUN_TIMEOUT=0 # seconds
+DU=0
 
 NAME=`basename "$0"`
 LOCK="/var/run/$NAME.lock"
@@ -330,6 +329,7 @@ END {
 }
 ' $total $@
 }
+# << log2csv
 
 bye() {
   [ "$DEBUG" == "0" -a "$DRY_RUN" == "0" ] && [ -f "$LOCK" ] && rm -v "$LOCK"
@@ -339,7 +339,6 @@ bye() {
 # Args
 #--------------------------------------
 
-RSYNC="rsync -au --links --force --numeric-ids --relative --devices --stats"
 while [ $# -gt 0 ]; do
   case "$1" in
 
@@ -384,15 +383,10 @@ DIRS=$(echo $DIRS)
 if [ "$DEBUG" -gt 2 ]; then
     echo "
 RSYNC=\"$RSYNC\"
-
 SSH_OPT=\"$SSH_OPT\"
-
 CONN_TIMEOUT=\"$CONN_TIMEOUT\"
-
 PARALLEL=\"$PARALLEL\"
-
 DIRS=\"$DIRS\"
-
 SERVERS=\"$SERVERS\"
 "
   exit 0
@@ -401,7 +395,12 @@ fi
 #--------------------------------------
 # MAIN
 #--------------------------------------
-([ -n "$BACKUP_DIR" ] && cd "$BACKUP_DIR") || exit 1
+if [ -z "$BACKUP_DIR" ]; then
+  echo "$NAME: variable BACKUP_DIR is empty. Please use --backup-dir DIR." 1>&2
+  exit 1
+fi
+cd "$BACKUP_DIR" || exit 1
+
 declare start=`date +%s`
 declare count_server=0
 declare cmds=""
