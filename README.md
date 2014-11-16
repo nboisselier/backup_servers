@@ -10,12 +10,12 @@ This script is written in bash.
 ## Config
 It use a simple bash config file (eg: /etc/backup_servers.conf), here is the default values:
 
-> BACKUP_DIR=""
-> SERVERS=""
-> DIRS=""
-> PARALLEL=1
-> RSYNC="rsync -au --links --force --numeric-ids --relative --devices --stats"
-> RSYNC_OPT=""
+- BACKUP_DIR=""
+- SERVERS=""
+- DIRS=""
+- PARALLEL=1
+- RSYNC="rsync -au --links --force --numeric-ids --relative --devices --stats"
+- RSYNC_OPT=""
 
 Or arguments on the command line:
 
