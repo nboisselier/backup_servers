@@ -1,1 +1,2 @@
-40 02 * * * root LOG=/var/log/backup_servers.log (cd /usr/local/src/backup_servers && git pull) > $LOG; backup_servers --du --conf /home/backup/backup.conf >> $LOG; backup_servers --log2err $LOG
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+40 01 * * * root LOG=/var/log/backup_servers.log; (cd /usr/local/src/backup_servers && git pull) > $LOG; backup_servers --conf /etc/backup_servers.conf >> $LOG; backup_servers --log2err $LOG

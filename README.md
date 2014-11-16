@@ -8,7 +8,7 @@ Wrapper for rsync, parallelize backup. Used to backup 200 servers in production 
 This script is written in bash.
 
 ## Config
-It use a simple bash config file (eg: /home/backup/backup.conf), here is the default values:
+It use a simple bash config file (eg: /etc/backup_servers.conf), here is the default values:
 
 > BACKUP_DIR=""
 > SERVERS=""
@@ -28,22 +28,22 @@ You can use as well any `$(shell command)` to get the list of directories passed
 ## Example
 
 ```bash
-  # /home/backup/backup.conf:
+  # /etc/backup_servers.conf:
   
   BACKUP_DIR=/home/backup
   PARALLEL=4
   SERVERS=$(mysql sys -NBe "SELECT host FROM server")
   # If you want specifics directories per server, you can get it from a file on the server
-  DIRS='$(if [ -e /etc/backup_paths ]; then cat /etc/backup_paths; else echo "/etc /home"; fi)'
+  DIRS='$(if [ -e /etc/backup_servers.dirs ]; then cat /etc/backup_servers.dirs; else echo "/etc /home"; fi)'
   RSYNC_OPT="-zau --rsync-path='nice +19 rsync' --bwlimit 1024"
 
 ```
 You can then test your config with arguments to change values of the config file:
 
-  `backup_servers --conf /home/backup/backup.conf --servers macbook.brighton.loc --dirs /private/etc --debug`
+  `backup_servers --conf /etc/backup_servers.conf --servers macbook.brighton.loc --dirs /private/etc --debug`
   
 Or run the backup in rsync dry mode:
   
-  `backup_servers --conf /home/backup/backup.conf -n`
+  `backup_servers --conf /etc/backup_servers.conf -n`
   
 
