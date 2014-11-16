@@ -33,14 +33,14 @@ You can use as well any `$(shell command)` to get the list of directories passed
   BACKUP_DIR=/home/backup
   PARALLEL=4
   SERVERS=$(mysql sys -NBe "SELECT host FROM server")
-  # If you want specifics directories per server, you can get it from a file on the server
+  # If you want specifics directories list per server, you can get it from a file on the server
   DIRS='$(if [ -e /etc/backup_servers.dirs ]; then cat /etc/backup_servers.dirs; else echo "/etc /home"; fi)'
-  RSYNC_OPT="-zau --rsync-path='nice +19 rsync' --bwlimit 1024"
+  RSYNC_OPT="-z --rsync-path='nice +19 rsync' --bwlimit 1024"
 
 ```
 You can then test your config with arguments to change values of the config file:
 
-  `backup_servers --conf /etc/backup_servers.conf --servers macbook.brighton.loc --dirs /private/etc --debug`
+  `backup_servers --conf /etc/backup_servers.conf --servers myserver.mydomain.loc --dirs /etc --debug`
   
 Or run the backup in rsync dry mode:
   
