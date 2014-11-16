@@ -19,6 +19,7 @@ SSH_OPT=""
 CONN_TIMEOUT=10 # seconds
 RUN_TIMEOUT=0 # seconds
 DU=0
+PKG_LIST=1
 
 NAME=`basename "$0"`
 LOCK="/var/run/$NAME.lock"
@@ -63,6 +64,7 @@ Backup a list of directories combined with a list of directories
   --ssh-opt
 
   --[no-]du       Print directories size by server (default: $DU)
+  --[no-]pkg-list backup package list into /etc/*.backup (default: $PKG_LIST, only port and apt supported)
   --log2csv       [LOG_FILE|STDIN], Transform log into csv
   --log2err       [LOG_FILE|STDIN], Extract errors from log
 
@@ -80,6 +82,10 @@ Backup myserser:/etc into /opt/backup:
 Backup a list of directories and servers from a conf file
 
   $NAME --conf /etc/$NAME.conf
+
+Backup with csv stats output
+
+  $NAME --conf /etc/$NAME.conf | $NAME --log2csv
 
 Test a config:
 
@@ -249,7 +255,9 @@ test_dirs() {
   declare cmd="ssh $SSH_OPT -q -o ConnectTimeout=$CONN_TIMEOUT $s"
   is_locahost $s && cmd="bash -c"
 
-  declare exit=0; [ $DEBUG -gt 0 -o $DRY_RUN -gt 0 ] && exit=1
+  declare exit=0;
+  [ $DEBUG -gt 0 -o $DRY_RUN -gt 0 ] && exit=1
+  [ $PKG_LIST -gt 0 ] && exit=1
   #exit=0
   #echo "$exit: <$cmd>" 1>&2
   $cmd \
@@ -358,6 +366,8 @@ while [ $# -gt 0 ]; do
     --dry-run|-n) DRY_RUN=1; RSYNC="$RSYNC --dry-run" ;;
     --du) DU="1" ;;
     --no-du) DU="0" ;;
+    --pkg-list) PKG_LIST="1" ;;
+    --no-pkg-list) PKG_LIST="0" ;;
 
     -*help|-h) usage | pod2text --width 250; exit 0 ;;
     --man) usage | pod2man | man -l -; exit 0 ;;
