@@ -22,7 +22,6 @@ DU=0
 PKG_LIST=1
 
 NAME=`basename "$0"`
-LOCK="/var/run/$NAME.lock"
 DEBUG=0
 VERBOSE=0
 DATE=`date +%Y%m%d-%H%M%S`
@@ -111,40 +110,6 @@ Nicolas Boisselier nicolas.boisselier@gmail.com
 "
 }
 
-check_lock() {
-  [ "$DEBUG" == "0" ] || return 0
-  [ "$DRY_RUN" == "0" ] || return 0
-
-  declare lock="$@"
-  declare pid=""
-
-	if [ -e "$lock" ]; then
-
-    pid=$(cat $lock)
-		echo "$NAME: Lock already exists: $lock (pid: $pid)" 1>&2
-
-		# Bad end !
-    [ -z "$pid" ] && echo EMPTY
-    [ -z "$pid" ] || ps -o pid=|grep -m1 -q "^ *${pid}$" || rm -v $lock
-
-	fi
-
-	if [ -e "$lock" ]; then
-		# Too long !
-		find "$lock" -type f -mtime +7 -exec bash -c "rm {}; [ -z '$pid' ] || kill -9 $pid" \;
-  fi
-
-	if [ -e "$lock" ]; then
-		echo "WARN: Process still running: pid=$pid ps="$(ps uw -p $pid 2>/dev/null| tail -1) 1>&2
-		return 1
-	fi
-
-	echo $$ > "$lock" || return 2
-
-  return 0
-
-}
-
 is_locahost() {
   case $1 in
     127.0.0.1|localhost*) return 0 ;;
@@ -181,8 +146,18 @@ backup_dirs() {
   #
   declare lock="$BACKUP_DIR/$s/$NAME.lock"
 	if [ "$DEBUG" == "0" -a "$DRY_RUN" == "0" ] && [ -e "$lock" ]; then
-		echo "$s: ERR: $lock already exists!"
-		return 2
+
+    declare pid=`cat "$lock"`
+
+    if [ -z `ps -p $pid | sed 1d` ]; then
+     echo "$s: WARN: delete old lock $lock, pid $pid is not running"
+     rm "$lock"
+
+    else
+      echo "$s: ERR: $lock already exists!"
+      return 2
+
+    fi
 	fi
 
   #
@@ -339,10 +314,6 @@ END {
 }
 # << log2csv
 
-bye() {
-  [ "$DEBUG" == "0" -a "$DRY_RUN" == "0" ] && [ -f "$LOCK" ] && rm -v "$LOCK"
-}
-
 #--------------------------------------
 # Args
 #--------------------------------------
@@ -414,8 +385,6 @@ cd "$BACKUP_DIR" || exit 1
 declare start=`date +%s`
 declare count_server=0
 declare cmds=""
-
-#check_lock $LOCK || exit
 
 for s in $SERVERS; do
 
