@@ -8,7 +8,7 @@ Wrapper for rsync, parallelize backup. Used to backup 200 servers in production 
 This script is written in bash.
 
 ## Config
-It use a simple bash config file (eg: /etc/backup_servers.conf), here is the default values:
+It use a simple bash config file (eg: /etc/backup_servers.conf), here are the default values:
 
 - BACKUP_DIR=""
 - SERVERS=""
