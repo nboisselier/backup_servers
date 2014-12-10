@@ -149,7 +149,7 @@ backup_dirs() {
 
     declare pid=`cat "$lock"`
 
-    if [ -z `ps -p $pid | sed 1d` ]; then
+    if [[ -z `ps -p $pid | sed 1d` ]]; then
      echo "$s: WARN: delete old lock $lock, pid $pid is not running"
      rm "$lock"
 
