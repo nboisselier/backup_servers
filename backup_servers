@@ -20,6 +20,7 @@ CONN_TIMEOUT=10 # seconds
 RUN_TIMEOUT=0 # seconds
 DU=0
 PKG_LIST=1
+NO_SERVER_DIR=0
 
 NAME=`basename "$0"`
 DEBUG=0
@@ -48,6 +49,7 @@ Backup a list of directories combined with a list of directories
     * CONN_TIMEOUT=$CONN_TIMEOUT
     * DIRS=$DIRS
     * SERVERS=$SERVERS
+    * NO_SERVER_DIR=$NO_SERVER_DIR
     Need to be the first argument.
 
   --servers       Servers separated by a space
@@ -62,6 +64,7 @@ Backup a list of directories combined with a list of directories
   -n,--dry-run
   --ssh-opt
 
+  --no-server-dir Don't create server sub directory (default: $NO_SERVER_DIR)
   --[no-]du       Print directories size by server (default: $DU)
   --[no-]pkg-list backup package list into /etc/*.backup (default: $PKG_LIST, only port and apt supported)
   --log2csv       [LOG_FILE|STDIN], Transform log into csv
@@ -142,9 +145,19 @@ backup_dirs() {
   echo "$s: found: "$(echo "$dirs")
 
   #
+  # Destination directory
+  #
+  declare dest_dir="$BACKUP_DIR/"
+  if [ "$NO_SERVER_DIR" == "1" ]; then
+    dest_dir="$BACKUP_DIR"
+  else
+    dest_dir="$BACKUP_DIR/$s"
+  fi
+
+  #
   # Check Lock
   #
-  declare lock="$BACKUP_DIR/$s/$NAME.lock"
+  declare lock="$dest_dir/$NAME.lock"
 	if [ "$DEBUG" == "0" -a "$DRY_RUN" == "0" ] && [ -e "$lock" ]; then
 
     declare pid=`cat "$lock"`
@@ -163,8 +176,8 @@ backup_dirs() {
   #
   # Create backup dir
   #
-	if [ "$DEBUG" == "0" ] && ! [ -e $BACKUP_DIR/$s ] && ! mkdir -p $BACKUP_DIR/$s &>/dev/null; then
-		echo "$s: ERR: can't create $BACKUP_DIR/$s"
+	if [ "$DEBUG" == "0" ] && ! [ -e $dest_dir ] && ! mkdir -p $dest_dir &>/dev/null; then
+		echo "$s: ERR: can't create $dest_dir"
 		return 5
 	fi
 
@@ -198,7 +211,7 @@ backup_dirs() {
   done
   IFS=$ifs
 
-	declare cmd="$RSYNC $ssh_dirs \"$BACKUP_DIR/$s/\""
+	declare cmd="$RSYNC $ssh_dirs \"$dest_dir/\""
   [ $RUN_TIMEOUT -gt 0 ] && cmd="perl -e 'alarm $RUN_TIMEOUT; exec @ARGV' -- $cmd"
 
   if [ "$DEBUG" -gt "0"  ]; then
@@ -336,6 +349,7 @@ while [ $# -gt 0 ]; do
     --rsync-opt) shift; RSYNC="$RSYNC $1" ;;
     --dry-run|-n) DRY_RUN=1; RSYNC="$RSYNC --dry-run" ;;
     --du) DU="1" ;;
+    --no-server-dir) NO_SERVER_DIR="1" ;;
     --no-du) DU="0" ;;
     --pkg-list) PKG_LIST="1" ;;
     --no-pkg-list) PKG_LIST="0" ;;
