@@ -14,7 +14,7 @@ It use a simple bash config file (eg: /etc/backup_servers.conf), here are the de
 - SERVERS=""
 - DIRS=""
 - PARALLEL=1
-- RSYNC="rsync -au --links --force --numeric-ids --relative -D --stats"
+- RSYNC="rsync -au --force --numeric-ids --relative --stats"
 - RSYNC_OPT=""
 
 Or arguments on the command line:
