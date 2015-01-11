@@ -60,7 +60,7 @@ Backup a list of directories combined with a list of directories
   --run-timeout   Default: $RUN_TIMEOUT
   --parallel      Default: $PARALLEL
 
-  --rsync-opt     Added to RSYNC_OPT from config file
+  --rsync-opt     Set RSYNC_OPT
   -n,--dry-run
   --ssh-opt
 
@@ -346,7 +346,7 @@ while [ $# -gt 0 ]; do
     --parallel) shift; PARALLEL=$1 ;;
 
     --ssh-opt) shift; SSH_OPT="$1" ;;
-    --rsync-opt) shift; RSYNC="$RSYNC $1" ;;
+    --rsync-opt) shift; RSYNC_OPT="$1" ;;
     --dry-run|-n) DRY_RUN=1; RSYNC="$RSYNC --dry-run" ;;
     --du) DU="1" ;;
     --no-server-dir) NO_SERVER_DIR="1" ;;
