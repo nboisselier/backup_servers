@@ -157,7 +157,7 @@ backup_dirs() {
   #
   # Check Lock
   #
-  declare lock="$dest_dir/$NAME.lock"
+  declare lock="$dest_dir/$s"
 	if [ "$DEBUG" == "0" -a "$DRY_RUN" == "0" ] && [ -e "$lock" ]; then
 
     declare pid=`cat "$lock"`
