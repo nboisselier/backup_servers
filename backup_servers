@@ -200,8 +200,7 @@ backup_dirs() {
   # dir -> server:dir
   #
   IFS=$'\n'
-  for d in $dirs; do
-    d=`echo "$d"|sed 's/ /\\\\ /g'`
+  for d in $(sed "s/\([' ]\)/\\\\\\1/g" <<< "$dirs"); do
     if is_locahost $s; then
       ssh_dirs="$ssh_dirs \"$d\""
     else
