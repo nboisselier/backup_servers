@@ -330,10 +330,11 @@ END {
 # Args
 #--------------------------------------
 
+CONF=""
 while [ $# -gt 0 ]; do
   case "$1" in
 
-    --conf) shift; . "$1" ;;
+    --conf) shift; . "$1"; CONF="$1" ;;
     --servers) shift; SERVERS="$1" ;;
     --dirs) shift; DIRS="$1" ;;
     --backup-dir) shift; BACKUP_DIR="$1" ;;
@@ -410,6 +411,7 @@ done
 echo "-------------------------------------------"
 echo "- Start: $(date +'%F %T'), $count_server servers, $PARALLEL parallel, $CONN_TIMEOUT sec conn timeout, $RUN_TIMEOUT sec run timeout"
 echo "- Backup directory: $BACKUP_DIR"
+[ -n "$CONF" ] && echo "- Config file: $CONF"
 echo "-------------------------------------------"
 
 if [ -n "$cmds" ]; then
