@@ -229,8 +229,8 @@ backup_dirs() {
   #
   # Remove lock
   #
-	if [ "$DRY_RUN" == "0" -a -e "$lock" ]; then
-    echo $s: $(rm -v "$lock")
+	if [ -e "$lock" ]; then
+    [ "$DEBUG" = "0"  -a "$DRY_RUN" = "0" ] && echo $s: $(rm -v "$lock")
   fi
 
 }
