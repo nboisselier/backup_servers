@@ -230,8 +230,11 @@ backup_dirs() {
   # Remove lock
   #
 	if [ -e "$lock" ]; then
-    [ "$DEBUG" = "0"  -a "$DRY_RUN" = "0" ] && echo $s: $(rm -v "$lock")
+    [ "$DEBUG" = "0" -a "$DRY_RUN" = "0" ] && echo $s: $(rm -v "$lock")
   fi
+
+  # Tag file
+  [ "$DRY_RUN" = "0" ] && date +'%F %T' > "$dest_dir/BACKUP_SERVERS.LAST"
 
 }
 export -f backup_dirs
