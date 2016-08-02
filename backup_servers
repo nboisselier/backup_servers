@@ -131,7 +131,7 @@ backup_dirs() {
   # Check conn / dirs
   #
   declare dirs=""
-  dirs=$(test_dirs $s)
+  dirs=$(get_dirs $s)
 
   if [ "$?" != "0" ]; then
     echo "$s: connection failed"
@@ -235,18 +235,18 @@ backup_dirs() {
 
   # Tag file
   [ "$DRY_RUN" = "0" ] && (
-    date +'%F %T';
-    printf \
-      "server  : $s\n" \
-      "seconds : $((`date +%s`-$start))\n" \
-      "rsync   : $cmd\n" \
-    ;
+    echo "
+date    : $(date +'%F %T')
+seconds : "$((`date +%s`-$start))"
+host    : $s
+rsync   : $(sed 's/\([- ]\{1,\}\)/\'$'\n''\1/g' <<< "$cmd")
+";
   ) > "$dest_dir/BACKUP_SERVERS.LAST"
 
 }
 export -f backup_dirs
 
-test_dirs() {
+get_dirs() {
   declare s=$1; shift
   [ -z "$DIRS" ] && return 1
 
@@ -261,7 +261,7 @@ test_dirs() {
   $cmd \
     "( \
 ls -1d $DIRS; \
-if [ $exit -gt 0 ]; then true; \
+if [ $exit -gt 0 ]; then [ 1 ]; \
 elif [ -x /usr/bin/dpkg ]; then /usr/bin/dpkg --get-selections &> /etc/dpkg-get-selections.backup; \
 elif [ -x /opt/local/bin/port ]; then /opt/local/bin/port installed &> /etc/port-installed.backup; \
 fi; \
