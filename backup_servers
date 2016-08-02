@@ -234,7 +234,14 @@ backup_dirs() {
   fi
 
   # Tag file
-  [ "$DRY_RUN" = "0" ] && date +'%F %T' > "$dest_dir/BACKUP_SERVERS.LAST"
+  [ "$DRY_RUN" = "0" ] && (
+    date +'%F %T';
+    printf \
+      "server  : $s\n" \
+      "seconds : $((`date +%s`-$start))\n" \
+      "rsync   : $cmd\n" \
+    ;
+  ) > "$dest_dir/BACKUP_SERVERS.LAST"
 
 }
 export -f backup_dirs
