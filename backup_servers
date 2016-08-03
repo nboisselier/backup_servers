@@ -235,8 +235,7 @@ backup_dirs() {
 
   # Tag file
   [ "$DRY_RUN" = "0" ] && (
-    echo "
-date    : $(date +'%F %T')
+    echo "date    : $(date +'%F %T')
 seconds : "$((`date +%s`-$start))"
 host    : $s
 rsync   : $(perl -pe "s/( --?\w| $s:)/\n\$1/g" <<< "$cmd")
