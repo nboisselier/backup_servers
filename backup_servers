@@ -238,7 +238,7 @@ backup_dirs() {
     echo "date    : $(date +'%F %T')
 seconds : "$((`date +%s`-$start))"
 host    : $s
-rsync   : $(perl -pe "s/( --?\w| $s:)/\n\$1/g" <<< "$cmd")
+rsync   : $(perl -pe "s/( --\w+| $s:)/\n\$1/g" <<< "$cmd")
 ";
   ) > "$dest_dir/BACKUP_SERVERS.LAST"
 
