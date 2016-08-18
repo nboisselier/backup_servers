@@ -440,9 +440,9 @@ if [ -d "$CONF" ]; then
 
     #$0 -v -v -v --conf "$file"
     $0 --conf "$file" $ARGS
+    echo
   done
 
-  echo
   echo "-=========================================="
   echo "-= End: "$((`date +%s`-$start))" seconds, $(date +'%F %T')"
   echo "-=========================================="
