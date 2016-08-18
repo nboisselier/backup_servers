@@ -345,7 +345,15 @@ CONF=""
 while [ $# -gt 0 ]; do
   case "$1" in
 
-    --conf) shift; . "$1"; CONF="$1" ;;
+    --conf)
+      shift
+      CONF="$1"
+
+      if [ ! -d "$CONF" ]; then
+        . "$CONF" || exit
+      fi
+
+    ;;
     --servers) shift; SERVERS="$1" ;;
     --dirs) shift; DIRS="$1" ;;
     --backup-dir) shift; BACKUP_DIR="$1" ;;
@@ -398,6 +406,24 @@ SERVERS=\"$SERVERS\"
   exit 0
 fi
 
+declare start=`date +%s`
+if [ -d "$CONF" ]; then
+
+  echo "-=========================================="
+  [ -n "$CONF" ] && echo "-= Config directory: $CONF"
+  echo "-=========================================="
+  echo
+  for file in "$CONF"; do
+    echo $file
+  done
+  echo
+  echo "-=========================================="
+  echo "-= End: "$((`date +%s`-$start))" seconds, $(date +'%F %T')"
+  echo "-=========================================="
+
+  exit
+fi
+
 #--------------------------------------
 # MAIN
 #--------------------------------------
@@ -407,7 +433,6 @@ if [ -z "$BACKUP_DIR" ]; then
 fi
 cd "$BACKUP_DIR" || exit 1
 
-declare start=`date +%s`
 declare count_server=0
 declare cmds=""
 
