@@ -14,12 +14,13 @@ BACKUP_DIR=""
 SERVERS=""
 DIRS=""
 PARALLEL=1
-RSYNC="rsync -au --force --numeric-ids --relative --stats"
+RSYNC="rsync --archive --update --force --numeric-ids --relative --stats"
 RSYNC_OPT=""
 SSH_OPT=""
 CONN_TIMEOUT=10 # seconds
 RUN_TIMEOUT=0 # seconds
 DU=0
+NICE=0
 PKG_LIST=1
 NO_SERVER_DIR=0
 CONF_PATTERN_DIR='*.conf'
@@ -150,7 +151,7 @@ backup_dirs() {
   # Destination directory
   #
   declare dest_dir="$BACKUP_DIR/"
-  if [ "$NO_SERVER_DIR" == "1" ]; then
+  if [ "$NO_SERVER_DIR" = "1" ]; then
     dest_dir="$BACKUP_DIR"
   else
     dest_dir="$BACKUP_DIR/$s"
@@ -160,7 +161,7 @@ backup_dirs() {
   # Check Lock
   #
   declare lock="$dest_dir/$s.lock"
-	if [ "$DEBUG" == "0" -a "$DRY_RUN" == "0" ] && [ -e "$lock" ]; then
+	if [ "$DEBUG" = "0" -a "$DRY_RUN" = "0" ] && [ -e "$lock" ]; then
 
     declare pid=`cat "$lock"`
 
@@ -178,7 +179,7 @@ backup_dirs() {
   #
   # Create backup dir
   #
-	if [ "$DEBUG" == "0" ] && ! [ -e $dest_dir ] && ! mkdir -p $dest_dir &>/dev/null; then
+	if [ "$DEBUG" = "0" ] && ! [ -e $dest_dir ] && ! mkdir -p $dest_dir &>/dev/null; then
 		echo "$s: ERR: can't create $dest_dir"
 		return 5
 	fi
@@ -186,7 +187,7 @@ backup_dirs() {
   #
   # Create Lock
   #
-	if [ "$DEBUG" == "0" -a "$DRY_RUN" == "0" ]; then
+	if [ "$DEBUG" = "0" -a "$DRY_RUN" = "0" ]; then
     if ! echo $$ > "$lock"; then
       echo "$s: ERR: Can't create $lock"
       return 2
@@ -213,7 +214,7 @@ backup_dirs() {
   IFS=$ifs
 
 	declare cmd="$RSYNC $ssh_dirs \"$dest_dir/\""
-  [ $RUN_TIMEOUT -gt 0 ] && cmd="perl -e 'alarm $RUN_TIMEOUT; exec @ARGV' -- $cmd"
+  [[ $RUN_TIMEOUT -gt 0 ]] && cmd="perl -e 'alarm $RUN_TIMEOUT; exec @ARGV' -- $cmd"
 
   if [ "$DEBUG" -gt "0"  ]; then
     if [ "$DEBUG" -gt "1" ]; then
@@ -234,7 +235,9 @@ backup_dirs() {
     [ "$DEBUG" = "0" -a "$DRY_RUN" = "0" ] && echo $s: $(rm -v "$lock")
   fi
 
+  #
   # Tag file
+  #
   [ "$DRY_RUN" = "0" ] && (
     echo "date    : $(date +'%F %T')
 seconds : "$((`date +%s`-$start))"
@@ -295,7 +298,7 @@ log2err() {
 
 log2csv() {
   declare total=0
-  [ "$1" == "_total_" ] && total=1 && shift
+  [ "$1" = "_total_" ] && total=1 && shift
   exec perl -ne '
 BEGIN { %h = (); $total = shift @ARGV; $| = 1; }
 
@@ -335,8 +338,12 @@ END {
 
 }
 ' $total $@
+} # << log2csv"
+
+realpath(){
+  perl -MFile::Spec -MCwd -e 'print File::Spec->rel2abs( Cwd::abs_path($ARGV[0]) )."\n" if -e $ARGV[0]' "$@"
 }
-# << log2csv
+
 
 #--------------------------------------
 # Args
@@ -351,9 +358,11 @@ while [ $# -gt 0 ]; do
     --conf)
       shift
       CONF="$1"
+      INC=$(realpath "$CONF")
 
       if [ ! -d "$CONF" ]; then
-        . "$CONF" || exit
+        cd "$(dirname $CONF)" || exit
+        . "$INC" || exit
       fi
 
       # Pattern ifr start with *
@@ -365,7 +374,8 @@ while [ $# -gt 0 ]; do
       esac
 
     ;;
-    --pattern) CONF_PATTERN_DIR="$1" ;;
+    --nice) shift; NICE="$1" ;;
+    --pattern) shift; CONF_PATTERN_DIR="$1" ;;
     --servers) shift; SERVERS="$1" ;;
     --dirs) shift; DIRS="$1" ;;
     --backup-dir) shift; BACKUP_DIR="$1" ;;
@@ -396,16 +406,38 @@ while [ $# -gt 0 ]; do
   shift
 done
 
+#
+# Ssh
+#
 [ -z "$SSH_OPT" ] || SSH_OPT=" $SSH_OPT"
 SSH_OPT="-oBatchMode=yes$SSH_OPT"
 
-RSYNC="$RSYNC -e 'ssh $SSH_OPT'"
+#
+# Rsync options
+#
+[ "$VERBOSE" -gt 0 ] && RSYNC_OPT="$RSYNC_OPT $(seq $VERBOSE | xargs -n1 -IZ echo -v)"
+
+[ "$NICE" = "0" ] && NICE=""
+[ -n "$NICE" ] && RSYNC_OPT="$RSYNC_OPT --rsync-path='nice -n $NICE rsync'"
+
 [ -z "$RSYNC_OPT" ] || RSYNC="$RSYNC $RSYNC_OPT"
 
-[ "$VERBOSE" -gt 0 ] && RSYNC="$RSYNC $(seq $VERBOSE | xargs -n1 -IZ echo -v)"
+#
+# Rsync command
+#
+[ -n "$NICE" ] && RSYNC="nice -n $NICE $RSYNC"
+RSYNC="$RSYNC -e 'ssh $SSH_OPT'"
+
+#
+# Source: SERVERS
+# Desti.: DIRS
+#
 SERVERS=$(echo $SERVERS)
 DIRS=$(echo $DIRS)
 
+#
+# Debug and exit
+#
 if [ "$DEBUG" -gt 2 ]; then
     echo "
 RSYNC=\"$RSYNC\"
@@ -488,7 +520,7 @@ echo "-------------------------------------------"
 #--------------------------------------
 # Report
 #--------------------------------------
-if [ -n "$SERVERS" ] && [ "$DU" == "1" ]; then
+if [ -n "$SERVERS" ] && [ "$DU" = "1" ]; then
 
   echo
   echo "-------------------------------------------"
