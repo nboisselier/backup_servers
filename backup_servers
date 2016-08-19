@@ -438,7 +438,6 @@ if [ -d "$CONF" ]; then
     name=$(basename "$file")
     name=${name%${CONF_PATTERN_DIR}}
 
-    #$0 -v -v -v --conf "$file"
     $0 --conf "$file" $ARGS
     echo
   done
