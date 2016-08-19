@@ -22,6 +22,7 @@ RUN_TIMEOUT=0 # seconds
 DU=0
 PKG_LIST=1
 NO_SERVER_DIR=0
+CONF_PATTERN_DIR='*.conf'
 
 NAME=`basename "$0"`
 DEBUG=0
@@ -342,7 +343,9 @@ END {
 #--------------------------------------
 
 CONF=""
+ARGS="$@"
 while [ $# -gt 0 ]; do
+
   case "$1" in
 
     --conf)
@@ -353,7 +356,16 @@ while [ $# -gt 0 ]; do
         . "$CONF" || exit
       fi
 
+      # Pattern ifr start with *
+      case "$2" in
+        \**)
+          CONF_PATTERN_DIR="$2"
+          shift
+        ;;
+      esac
+
     ;;
+    --pattern) CONF_PATTERN_DIR="$1" ;;
     --servers) shift; SERVERS="$1" ;;
     --dirs) shift; DIRS="$1" ;;
     --backup-dir) shift; BACKUP_DIR="$1" ;;
@@ -407,15 +419,29 @@ SERVERS=\"$SERVERS\"
 fi
 
 declare start=`date +%s`
+
+#--------------------------------------
+# DIR CONF
+#--------------------------------------
 if [ -d "$CONF" ]; then
 
+  ARGS=${ARGS//--conf $CONF}
+
   echo "-=========================================="
-  [ -n "$CONF" ] && echo "-= Config directory: $CONF"
+  echo "-= Config directory: $CONF"
   echo "-=========================================="
   echo
-  for file in "$CONF"; do
-    echo $file
+
+  for file in "$CONF"/$CONF_PATTERN_DIR; do
+    [ -f "$file" ] || continue
+
+    name=$(basename "$file")
+    name=${name%${CONF_PATTERN_DIR}}
+
+    #$0 -v -v -v --conf "$file"
+    $0 --conf "$file" $ARGS
   done
+
   echo
   echo "-=========================================="
   echo "-= End: "$((`date +%s`-$start))" seconds, $(date +'%F %T')"
@@ -423,6 +449,7 @@ if [ -d "$CONF" ]; then
 
   exit
 fi
+#exec echo ">$CONF"
 
 #--------------------------------------
 # MAIN
