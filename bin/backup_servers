@@ -238,7 +238,7 @@ backup_dirs() {
   #
   # Tag file
   #
-  [ "$DRY_RUN" = "0" ] && (
+  [ "$DRY_RUN" = "0" -a "$DEBUG" = "0" ] && (
     echo "date    : $(date +'%F %T')
 seconds : "$((`date +%s`-$start))"
 host    : $s
