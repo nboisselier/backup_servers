@@ -57,19 +57,19 @@ Backup a list of directories combined with a list of directories
 
   --servers       Servers separated by a space
   --dirs          Dirs separated by a space
-  --backup-dir    Default: $BACKUP_DIR
+  --backup-dir    Default: (BACKUP_DIR=$BACKUP_DIR)
 
-  --conn-timeout  Default: $CONN_TIMEOUT
-  --run-timeout   Default: $RUN_TIMEOUT
-  --parallel      Default: $PARALLEL
+  --conn-timeout  Default: (CONN_TIMEOUT=$CONN_TIMEOUT)
+  --run-timeout   Default: (RUN_TIMEOUT=$RUN_TIMEOUT)
+  --parallel      Default: (PARALLEL=$PARALLEL)
 
   --rsync-opt     Set RSYNC_OPT
   -n,--dry-run
   --ssh-opt
 
-  --no-server-dir Don't create server sub directory (default: $NO_SERVER_DIR)
-  --[no-]du       Print directories size by server (default: $DU)
-  --[no-]pkg-list backup package list into /etc/*.backup (default: $PKG_LIST, only port and apt supported)
+  --no-server-dir Don't create server sub directory (default: NO_SERVER_DIR=$NO_SERVER_DIR)
+  --[no-]du       Print directories size by server (default: DU=$DU)
+  --[no-]pkg-list backup package list into /etc/*.backup (default: PKG_LIST=$PKG_LIST, only port and apt supported)
   --log2csv       [LOG_FILE|STDIN], Transform log into csv
   --log2err       [LOG_FILE|STDIN], Extract errors from log
 
@@ -98,7 +98,7 @@ Test a config:
 
 =head1 DESCRIPTION
 
-See <https://github.com/nboisselier/backup_servers>.
+See https://github.com/nboisselier/backup_servers.
 
 =head1 LICENSE
 
