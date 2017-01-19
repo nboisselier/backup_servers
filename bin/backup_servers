@@ -486,7 +486,7 @@ fi
 # MAIN
 #--------------------------------------
 if [ -z "$BACKUP_DIR" ]; then
-  echo "$NAME: variable BACKUP_DIR is empty. Please use --backup-dir DIR." 1>&2
+  echo "$NAME: variable BACKUP_DIR is empty. Please use --backup-dir DIR. or --conf FILE|DIR" 1>&2
   exit 1
 fi
 cd "$BACKUP_DIR" || exit 1
