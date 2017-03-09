@@ -293,7 +293,8 @@ alarm() { perl -e 'alarm shift; exec @ARGV' -- $@; }
 export -f alarm
 
 log2err() {
-  exec perl -ne 'print if /(: ERR:|connection failed|no directories|Alarm clock\s+perl)/' $@
+  #exec perl -ne 'print if /(: ERR:|connection failed|no directories|Alarm clock\s+perl)/' $@
+  exec grep -E '/(: ERR:|connection failed|no directories|Alarm clock\s+perl)/' $@
 }
 
 log2sql() {
