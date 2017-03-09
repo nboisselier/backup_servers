@@ -309,7 +309,7 @@ CEREATE TABLE backup_server (
   PRIMARY KEY(server,date,idnode)
 );
 EOF
-  log2csv | tail -n +2 | awk '{print "INSERT INTO backup_server VALUES (\""$1"\","$2","$3","$4","$5",\""$6"\");"}'
+  log2csv $@ | tail -n +2 | awk '{print "INSERT INTO backup_server VALUES (\""$1"\","$2","$3","$4","$5",\""$6"\");"}'
 }
 
 log2csv() {
