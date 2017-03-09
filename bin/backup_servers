@@ -298,8 +298,12 @@ log2err() {
 }
 
 log2sql() {
+  local today=$(date +%F)
+  local server=$(hostname -s)
   cat <<EOF
 CREATE TABLE IF NOT EXISTS backup_server (
+  server varchar(100),
+  date DATE NOT NULL,
   host varchar(100) COLLATE NOCASE,
   files_transfer bigint,
   files_total bigint,
@@ -307,10 +311,10 @@ CREATE TABLE IF NOT EXISTS backup_server (
   bytes_total bigint,
   time bigint,
   dirs text,
-  PRIMARY KEY(server,date,idnode)
+  PRIMARY KEY(server,date,host)
 );
 EOF
-  log2csv $@ | tail -n +2 | awk '{print "INSERT INTO backup_server VALUES (\""$1"\","$2","$3","$4","$5",\""$6"\");"}'
+  log2csv $@ | tail -n +2 | awk '{print "INSERT INTO backup_server VALUES (\"'$server'\",\"'$today'\",\""$1"\","$2","$3","$4","$5",\""$6"\");"}'
   exit
 }
 
