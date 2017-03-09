@@ -296,6 +296,22 @@ log2err() {
   exec perl -ne 'print if /(: ERR:|connection failed|no directories|Alarm clock\s+perl)/' $@
 }
 
+log2sql() {
+  cat <<EOF
+CEREATE TABLE backup_server (
+  host varchar(100) COLLATE NOCASE,
+  files_transfer bigint,
+  files_total bigint,
+  bytes_transfer bigint,
+  bytes_total bigint,
+  time bigint,
+  dirs text,
+  PRIMARY KEY(server,date,idnode)
+);
+EOF
+  log2csv | tail -n +2 | awk '{print "INSERT INTO backup_server VALUES (\""$1"\","$2","$3","$4","$5",\""$6"\");"}'
+}
+
 log2csv() {
   declare total=0
   [ "$1" = "_total_" ] && total=1 && shift
@@ -380,6 +396,7 @@ while [ $# -gt 0 ]; do
     --dirs) shift; DIRS="$1" ;;
     --backup-dir) shift; BACKUP_DIR="$1" ;;
     --log2csv) shift; log2csv $@ ;;
+    --log2sql) shift; log2sql $@ ;;
     --log2err) shift; log2err $@ ;;
 
     --conn-timeout) shift; CONN_TIMEOUT=$1 ;;
