@@ -298,7 +298,7 @@ log2err() {
 
 log2sql() {
   cat <<EOF
-CEREATE TABLE backup_server (
+CREATE TABLE IF NOT EXISTS backup_server (
   host varchar(100) COLLATE NOCASE,
   files_transfer bigint,
   files_total bigint,
