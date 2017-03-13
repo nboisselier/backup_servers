@@ -324,17 +324,15 @@ log2csv() {
   exec perl -ne '
 BEGIN { %h = (); $total = shift @ARGV; $| = 1; }
 
-  print if $total;
+print if $total;
 
-  /^(.*?): Number of files: (\d+)/ and $h{$1}{files_total} = $2;
-  /^(.*?): Number of files transferred: (\d+)/ and $h{$1}{files_transfer} = $2;
+/^(.*?): Number of files: (\d+)/ and $h{$1}{files_total} = $2;
+/^(.*?): Number of files transferred: (\d+)/ and $h{$1}{files_transfer} = $2;
 
-  /^(.*?): Total file size: (\d+)/ and $h{$1}{bytes_total} = $2;
-  /^(.*?): Total transferred file size: (\d+)/ and $h{$1}{bytes_transfer} = $2;
-  /^(.*?): rsync: (\d+) sec/ and $h{$1}{time} = $2;
-  /^([^:]+): found: (.*?)\s*$/ and $h{$1}{dirs} = $2;
-
-  $argv = $ARGV;
+/^(.*?): Total file size: (\d+)/ and $h{$1}{bytes_total} = $2;
+/^(.*?): Total transferred file size: (\d+)/ and $h{$1}{bytes_transfer} = $2;
+/^(.*?): rsync: (\d+) sec/ and $h{$1}{time} = $2;
+/^([^:]+): found: (.*?)\s*$/ and $h{$1}{dirs} = $2;
 
 END {
 
@@ -344,6 +342,11 @@ END {
 
   while (my ($h,$d) = each(%h)) {
 
+    $d->{files_transfer} ||= 0;
+    $d->{files_total} ||= 0;
+    $d->{bytes_transfer} ||= 0;
+    $d->{bytes_total} ||= 0;
+    $d->{time} ||= 0;
     if ($total) {
       for (@f) { $tot{$_} += $d->{$_}; }
     } else {
