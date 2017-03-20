@@ -301,7 +301,7 @@ log2sql() {
   local today=$(date +%F)
   local server=$(hostname -s)
   cat <<EOF
-CREATE TABLE IF NOT EXISTS backup_server (
+CREATE TABLE IF NOT EXISTS backup_servers (
   server varchar(100),
   date DATE NOT NULL,
   host varchar(100) COLLATE NOCASE,
