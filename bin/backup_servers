@@ -314,7 +314,7 @@ CREATE TABLE IF NOT EXISTS backup_servers (
   PRIMARY KEY(server,date,host)
 );
 EOF
-  log2csv $@ | tail -n +2 | perl -ne 'chomp($_); @_=split("\t",$_); unshift(@_,"'$server'","'$today'"); $_[8]=@_[8..(@_-1)]; foreach $i (qw(0 1 2 8)){$_[$i]=qq|"$_[$i]"|;}; print "REPLACE INTO backup_server VALUES (".join(",",map {$_ eq "" ? "NULL" : $_} @_).");\n"'
+  log2csv $@ | tail -n +2 | perl -ne 'chomp($_); @_=split("\t",$_); unshift(@_,"'$server'","'$today'"); $_[8]=@_[8..(@_-1)]; foreach $i (qw(0 1 2 8)){$_[$i]=qq|"$_[$i]"|;}; print "REPLACE INTO backup_servers VALUES (".join(",",map {$_ eq "" ? "NULL" : $_} @_).");\n"'
   exit
 }
 
