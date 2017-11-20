@@ -258,7 +258,7 @@ get_dirs() {
 
   declare exit=0;
   [ $DEBUG -gt 0 -o $DRY_RUN -gt 0 ] && exit=1
-  [ $PKG_LIST == "" ] && exit=1
+  [ $PKG_LIST = "" ] && exit=1
   #exit=0
   #echo "$exit: <$cmd>" 1>&2
   $cmd \
