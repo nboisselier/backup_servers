@@ -265,8 +265,8 @@ get_dirs() {
     "( \
 ls -1d $DIRS; \
 if [ $exit -gt 0 ]; then [ 1 ]; \
-elif [ -x /usr/bin/dpkg ]; then /usr/bin/dpkg --get-selections &> /etc/dpkg-get-selections.backup; \
-elif [ -x /opt/local/bin/port ]; then /opt/local/bin/port installed &> /etc/port-installed.backup; \
+elif [ -x /usr/bin/dpkg ]; then /usr/bin/dpkg --get-selections &> /etc/backup_servers.pkg; \
+elif [ -x /opt/local/bin/port ]; then /opt/local/bin/port installed &> /etc/backup_servers.pkg; \
 fi; \
 exit 0; \
 )" 2>/dev/null
