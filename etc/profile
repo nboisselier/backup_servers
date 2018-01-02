@@ -1,11 +1,22 @@
 backup_servers_post_logs() {
   backup_servers --log2csv $@ | awk -F '\t' 'nohead++{print $0}' | while read host files_transfer files_total bytes_transfer bytes_total time dirs
   do
-    nb_api /data/host_info/replace.json -d host=$(hostname) -d key=backup_servers.$host.files_transfer -d "val=$files_transfer"
-    nb_api /data/host_info/replace.json -d host=$(hostname) -d key=backup_servers.$host.files_total -d "val=$files_total"
-    nb_api /data/host_info/replace.json -d host=$(hostname) -d key=backup_servers.$host.bytes_transfer -d "val=$bytes_transfer"
-    nb_api /data/host_info/replace.json -d host=$(hostname) -d key=backup_servers.$host.bytes_total -d "val=$bytes_total"
-    nb_api /data/host_info/replace.json -d host=$(hostname) -d key=backup_servers.$host.time -d "val=$time"
-    nb_api /data/host_info/replace.json -d host=$(hostname) -d key=backup_servers.$host.dirs -d "val=$dirs"
+    nb_api_post key=backup_servers.$host.files_transfer "val=$files_transfer"
+    nb_api_post key=backup_servers.$host.files_total "val=$files_total"
+    nb_api_post key=backup_servers.$host.bytes_transfer "val=$bytes_transfer"
+    nb_api_post key=backup_servers.$host.bytes_total "val=$bytes_total"
+    nb_api_post key=backup_servers.$host.time "val=$time"
+    nb_api_post key=backup_servers.$host.dirs "val=$dirs"
   done
 }
+# root 02.01.18 backup_servers_post_logs() {
+# root 02.01.18   backup_servers --log2csv $@ | awk -F '\t' 'nohead++{print $0}' | while read host files_transfer files_total bytes_transfer bytes_total time dirs
+# root 02.01.18   do
+# root 02.01.18     nb_api /data/host_info/replace.json -d host=$(hostname) -d key=backup_servers.$host.files_transfer -d "val=$files_transfer"
+# root 02.01.18     nb_api /data/host_info/replace.json -d host=$(hostname) -d key=backup_servers.$host.files_total -d "val=$files_total"
+# root 02.01.18     nb_api /data/host_info/replace.json -d host=$(hostname) -d key=backup_servers.$host.bytes_transfer -d "val=$bytes_transfer"
+# root 02.01.18     nb_api /data/host_info/replace.json -d host=$(hostname) -d key=backup_servers.$host.bytes_total -d "val=$bytes_total"
+# root 02.01.18     nb_api /data/host_info/replace.json -d host=$(hostname) -d key=backup_servers.$host.time -d "val=$time"
+# root 02.01.18     nb_api /data/host_info/replace.json -d host=$(hostname) -d key=backup_servers.$host.dirs -d "val=$dirs"
+# root 02.01.18   done
+# root 02.01.18 }
