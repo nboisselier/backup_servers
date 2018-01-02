@@ -1,0 +1,11 @@
+backup_servers_post_logs() {
+  backup_servers --log2csv $@ | awk -F '\t' 'nohead++{print $0}' | while read host files_transfer files_total bytes_transfer bytes_total time dirs
+  do
+    nb_api /data/host_info/replace.json -d host=$(hostname) -d key=backup_servers.$host.files_transfer -d "val=$files_transfer"
+    nb_api /data/host_info/replace.json -d host=$(hostname) -d key=backup_servers.$host.files_total -d "val=$files_total"
+    nb_api /data/host_info/replace.json -d host=$(hostname) -d key=backup_servers.$host.bytes_transfer -d "val=$bytes_transfer"
+    nb_api /data/host_info/replace.json -d host=$(hostname) -d key=backup_servers.$host.bytes_total -d "val=$bytes_total"
+    nb_api /data/host_info/replace.json -d host=$(hostname) -d key=backup_servers.$host.time -d "val=$time"
+    nb_api /data/host_info/replace.json -d host=$(hostname) -d key=backup_servers.$host.dirs -d "val=$dirs"
+  done
+}
