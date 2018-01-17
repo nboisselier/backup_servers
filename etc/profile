@@ -1,4 +1,11 @@
 backup_servers_post_logs() {
+  local i
+  for i in $@; do
+    local name=$(basename "$i")
+    name=${name%.*}
+    local date=$(awk -F': |, ' '$1 ~ /^[# -]+Start/{print $2}' "$i" 2>/dev/null)
+    nb_api_post_host_info key=backup_servers.$name.files_transfer "val=$date"
+  done
   backup_servers --log2csv $@ | awk -F '\t' 'nohead++{print $0}' | while read host files_transfer files_total bytes_transfer bytes_total time dirs
   do
     nb_api_post_host_info key=backup_servers.$host.files_transfer "val=$files_transfer"
