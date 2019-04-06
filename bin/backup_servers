@@ -365,10 +365,37 @@ END {
 ' $total $@
 } # << log2csv"
 
-realpath(){
-  perl -MFile::Spec -MCwd -e 'print File::Spec->rel2abs( Cwd::abs_path($ARGV[0]) )."\n" if -e $ARGV[0]' "$@"
-}
+which realpath > /dev/null || realpath() {
+	#perl -MFile::Spec -MCwd -e 'print File::Spec->rel2abs( Cwd::abs_path($ARGV[0]) )."\n" if -e $ARGV[0]' "$1"
+	local pwd_bak=$PWD
 
+	[ -e "$1" ] || return
+
+	if [ -d "$1" ]; then
+		cd "$1" || return
+		pwd -P
+	else
+
+		local BASENAME="$(basename "$1")"
+		local LINK=$(readlink "$BASENAME")
+		cd "$(dirname "$1")"
+
+		while [ "$LINK" ]; do
+			cd "$(dirname "$LINK")"
+			LINK=$(readlink "$BASENAME")
+		done
+
+		local DIR="$(pwd -P)"
+		if [ "$DIR" = "/" ]; then
+			echo "$DIR$BASENAME"
+		else
+			echo "$DIR/$BASENAME"
+		fi
+
+	fi
+
+	cd "$pwd_bak"
+}
 
 #--------------------------------------
 # Args
@@ -390,7 +417,7 @@ while [ $# -gt 0 ]; do
         . "$INC" || exit
       fi
 
-      # Pattern ifr start with *
+      # Pattern if start with *
       case "$2" in
         \**)
           CONF_PATTERN_DIR="$2"
