@@ -44,30 +44,29 @@ ${NAME}
 
 Backup a list of directories combined with a list of directories
 
-  --conf          Config file containing environment variables, Default:
+  --conf Config file containing environment variables, Default:
     * BACKUP_DIR=$BACKUP_DIR
+    * SERVERS=$SERVERS
+    * DIRS=$DIRS
     * RSYNC_OPT=$RSYNC_OPT
     * SSH_OPT=$SSH_OPT
     * PARALLEL=$PARALLEL
     * CONN_TIMEOUT=$CONN_TIMEOUT
-    * DIRS=$DIRS
-    * SERVERS=$SERVERS
     * NO_SERVER_DIR=$NO_SERVER_DIR
-    Need to be the first argument.
 
-  --servers       Servers separated by a space
-  --dirs          Dirs separated by a space
   --backup-dir    Default: (BACKUP_DIR=$BACKUP_DIR)
+  --servers       Servers separated by a space (SERVERS=$SERVERS)
+  --dirs          Dirs separated by a space (DIRS=$DIRS)
 
   --conn-timeout  Default: (CONN_TIMEOUT=$CONN_TIMEOUT)
   --run-timeout   Default: (RUN_TIMEOUT=$RUN_TIMEOUT)
   --parallel      Default: (PARALLEL=$PARALLEL)
+  --no-server-dir Don't create server hostname sub directory (default: NO_SERVER_DIR=$NO_SERVER_DIR)
 
   --rsync-opt     Set RSYNC_OPT
   -n,--dry-run
   --ssh-opt
 
-  --no-server-dir Don't create server sub directory (default: NO_SERVER_DIR=$NO_SERVER_DIR)
   --[no-]du       Print directories size by server (default: DU=$DU)
   --[no-]pkg-list backup package list into /etc/*.backup (default: PKG_LIST=$PKG_LIST, only port and apt supported)
   --log2csv       [LOG_FILE|STDIN], Transform log into csv
@@ -179,7 +178,7 @@ backup_dirs() {
   #
   # Create backup dir
   #
-	if [ "$DEBUG" = "0" ] && ! [ -e $dest_dir ] && ! mkdir -p $dest_dir &>/dev/null; then
+	if [ "$DEBUG" = "0" -a "$DRY_RUN" = "0" ] && ! [ -e $dest_dir ] && ! mkdir -p $dest_dir &>/dev/null; then
 		echo "$s: ERR: can't create $dest_dir"
 		return 5
 	fi
