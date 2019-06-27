@@ -54,9 +54,9 @@ Backup a list of directories combined with a list of directories
     * CONN_TIMEOUT=$CONN_TIMEOUT
     * NO_SERVER_DIR=$NO_SERVER_DIR
 
-  --backup-dir    Default: (BACKUP_DIR=$BACKUP_DIR)
-  --servers       Servers separated by a space (SERVERS=$SERVERS)
-  --dirs          Dirs separated by a space (DIRS=$DIRS)
+  --backup-dir    Local directory to backup to (BACKUP_DIR=$BACKUP_DIR)
+  --servers       Servers, hosts or ips to sync separated by a space (SERVERS=$SERVERS)
+  --dirs          Remote directories to sync separated by a space (DIRS=$DIRS)
 
   --conn-timeout  Default: (CONN_TIMEOUT=$CONN_TIMEOUT)
   --run-timeout   Default: (RUN_TIMEOUT=$RUN_TIMEOUT)
