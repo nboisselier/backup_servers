@@ -16,3 +16,52 @@ backup_servers_post_logs() {
     nb_api_post_host_info key=backup_servers.$host.dirs "val=$dirs"
   done
 }
+
+backup_servers_create_lock() {
+  #
+  # Check Lock
+  #
+  declare lock="${1:?Usage: backup_servers_create_lock LOCK_FILE}"
+  declare preff; [ $# -gt 0 ] && preff="$2"
+
+	if [ -e "$lock" ] ; then
+  	declare pid=`cat "$lock"`
+
+  	if [[ -z `ps -p $pid | sed 1d` ]]; then
+   	 echo "${preff}WARN: delete old lock $lock, pid $pid is not running"
+   	 rm "$lock"
+
+  	else
+    	echo "${preff}ERR: $lock already exists!"
+    	return 2
+
+  	fi
+  fi
+
+  if ! echo $$ > "$lock"; then
+    echo "$s: ERR: Can't create $lock"
+    return 2
+  fi
+
+  return 0
+}
+
+backup_servers_log_run_confs() {
+	declare LOG_DIR="${1:?Usage: backup_servers_log_run_confs LOG_DIR CONF1 CONF2 ... Run *.conf files in current directory}"; shift
+	[ -e "$LOG_DIR" ] || mkdir -vp "$LOG_DIR"
+
+	for conf in $@; do
+		[ -e ${conf}.conf ] || continue
+		#echo "$conf"; continue
+		#echo backup_servers --conf ${conf}.conf --debug; continue
+
+  	backup_servers_create_lock "$LOG_DIR/$conf.lock" || return
+
+		#backup_servers --conf ${conf}.conf; continue
+
+		backup_servers --conf ${conf}.conf > $LOG_DIR/${conf}.log && \
+			backup_servers_post_logs $LOG_DIR/${conf}.log >/dev/null 2>&1
+
+		rm "$LOG_DIR/$conf.lock"
+	done
+}
