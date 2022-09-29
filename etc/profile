@@ -55,7 +55,7 @@ backup_servers_log_run_confs() {
 		#echo "$conf"; continue
 		#echo backup_servers --conf ${conf}.conf --debug; continue
 
-  	backup_servers_create_lock "$LOG_DIR/$conf.lock" || return
+  	backup_servers_create_lock "$LOG_DIR/$conf.lock" || continue
 
 		#backup_servers --conf ${conf}.conf; continue
 
