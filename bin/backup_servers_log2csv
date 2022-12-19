@@ -1,0 +1,45 @@
+#!/usr/bin/perl -n
+BEGIN {
+	%h = ();
+	$total = shift @ARGV;
+	$| = 1;
+}
+
+print if $total;
+
+/^(.*?): Number of files: ([\d,]+)/ and $h{$1}{files_total} = $2;
+/^(.*?): Number of files transferred: ([\d,]+)/ and $h{$1}{files_transfer} = $2;
+
+/^(.*?): Total file size: ([\d,]+)/ and $h{$1}{bytes_total} = $2;
+/^(.*?): Total transferred file size: ([\d,]+)/ and $h{$1}{bytes_transfer} = $2;
+/^(.*?): rsync: (\d+) sec/ and $h{$1}{time} = $2;
+/^([^:]+): found: (.*?)\s*$/ and $h{$1}{dirs} = $2;
+
+END {
+
+  @f = qw/files_transfer files_total bytes_transfer bytes_total time dirs/;
+  %tot = (map{$_ => 0} @f);
+  print join("\t","host",@f)."\n" unless $total;
+
+  while (my ($h,$d) = each(%h)) {
+
+    for my $k (qw/files_total files_transfer bytes_total bytes_transfer time/) {
+      $d->{$k} =~ s/\D//g;
+      $d->{$k} ||= 0;
+    }
+
+    if ($total) {
+      for (@f) { $tot{$_} += $d->{$_}; }
+    } else {
+      print join("\t",$h,map{$d->{$_}} @f)."\n";
+    }
+
+  }
+
+  print "\n"
+    ."-------------------------------------------\n"
+    ."- Files transfered / total: ".$tot{files_transfer}." / ".$tot{files_total}."\n" 
+    ."- Bytes transfered / total: ".$tot{bytes_transfer}." / ".$tot{bytes_total}."\n" 
+  if $total;
+
+}

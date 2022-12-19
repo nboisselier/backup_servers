@@ -161,19 +161,7 @@ backup_dirs() {
   #
   declare lock="$dest_dir/$s.lock"
 	if [ "$DEBUG" = "0" -a "$DRY_RUN" = "0" ] && [ -e "$lock" ]; then
-
     backup_servers_create_lock "$lock" "$s: " || return
-# root 27.06.19     declare pid=`cat "$lock"`
-# root 27.06.19 
-# root 27.06.19     if [[ -z `ps -p $pid | sed 1d` ]]; then
-# root 27.06.19      echo "$s: WARN: delete old lock $lock, pid $pid is not running"
-# root 27.06.19      rm "$lock"
-# root 27.06.19 
-# root 27.06.19     else
-# root 27.06.19       echo "$s: ERR: $lock already exists!"
-# root 27.06.19       return 2
-# root 27.06.19 
-# root 27.06.19     fi
 	fi
 
   #
@@ -321,6 +309,7 @@ EOF
 log2csv() {
   declare total=0
   [ "$1" = "_total_" ] && total=1 && shift
+# NB 19.12.22: TODO replace with bin/backup_server_log2csv  
   exec perl -ne '
 BEGIN { %h = (); $total = shift @ARGV; $| = 1; }
 
