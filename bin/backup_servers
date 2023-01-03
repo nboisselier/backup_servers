@@ -310,6 +310,7 @@ log2csv() {
   declare total=0
   [ "$1" = "_total_" ] && total=1 && shift
 # NB 19.12.22: TODO replace with bin/backup_server_log2csv  
+	exec backup_servers_log2csv $total $@
   exec perl -ne '
 BEGIN { %h = (); $total = shift @ARGV; $| = 1; }
 
