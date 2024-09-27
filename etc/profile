@@ -1,11 +1,13 @@
 backup_servers_post_logs() {
   local i
+
   for i in $@; do
     local name=$(basename "$i")
     name=${name%.*}
     local date=$(awk -F': |, ' '$1 ~ /^[# -]+Start/{print $2}' "$i" 2>/dev/null)
     nb_api_post_host_info backup_servers.$name.log "$date"
   done
+
   backup_servers --log2csv $@ | awk -F '\t' 'nohead++{print $0}' | while read host files_transfer files_total bytes_transfer bytes_total time dirs
   do
     nb_api_post_host_info backup_servers.$host.files_transfer "$files_transfer"
@@ -50,14 +52,13 @@ backup_servers_log_run_confs() {
 	declare LOG_DIR="${1:?Usage: backup_servers_log_run_confs LOG_DIR CONF1 CONF2 ... Run *.conf files in current directory}"; shift
 	[ -e "$LOG_DIR" ] || mkdir -vp "$LOG_DIR"
 
+	local conf
 	for conf in $@; do
 		[ -e ${conf}.conf ] || continue
 		#echo "$conf"; continue
 		#echo backup_servers --conf ${conf}.conf --debug; continue
 
   	backup_servers_create_lock "$LOG_DIR/$conf.lock" || continue
-
-		#backup_servers --conf ${conf}.conf; continue
 
 		backup_servers --conf ${conf}.conf > $LOG_DIR/${conf}.log && \
 			backup_servers_post_logs $LOG_DIR/${conf}.log >/dev/null 2>&1

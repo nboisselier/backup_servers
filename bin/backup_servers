@@ -47,7 +47,7 @@ Backup a list of directories combined with a list of directories
   --conf Config file containing environment variables, Default:
     * BACKUP_DIR=$BACKUP_DIR
     * SERVERS=$SERVERS
-    * DIRS=$DIRS
+    * DIRS=""
     * RSYNC_OPT=$RSYNC_OPT
     * SSH_OPT=$SSH_OPT
     * PARALLEL=$PARALLEL
@@ -56,7 +56,7 @@ Backup a list of directories combined with a list of directories
 
   --backup-dir    Local directory to backup to (BACKUP_DIR=$BACKUP_DIR)
   --servers       Servers, hosts or ips to sync separated by a space (SERVERS=$SERVERS)
-  --dirs          Remote directories to sync separated by a space (DIRS=$DIRS)
+  --dirs          Remote directories to sync separated by a space (DIRS=)
 
   --conn-timeout  Default: (CONN_TIMEOUT=$CONN_TIMEOUT)
   --run-timeout   Default: (RUN_TIMEOUT=$RUN_TIMEOUT)
@@ -173,16 +173,6 @@ backup_dirs() {
 	fi
 
   #
-  # Create Lock
-  #
-# root 27.06.19 	if [ "$DEBUG" = "0" -a "$DRY_RUN" = "0" ]; then
-# root 27.06.19     if ! echo $$ > "$lock"; then
-# root 27.06.19       echo "$s: ERR: Can't create $lock"
-# root 27.06.19       return 2
-# root 27.06.19     fi
-# root 27.06.19 	fi
-
-  #
   # Dirs
   #
   declare ssh_dirs="" d="" ifs=$IFS
@@ -264,15 +254,20 @@ exit 0; \
 
 parallelize() {
   declare pid=""
+  declare jobcnt=""
+
   while [ $# -gt 0 ] ; do
     jobcnt=(`jobs -p`)
+#echo "pid=$pid jobs=${#jobcnt[@]} p=$PARALLEL $1 $jobs"
     if [ ${#jobcnt[@]} -lt $PARALLEL ] ; then
-      #$1
       $1 &
       pid=$!
       shift  
+    else
+    	sleep 2
     fi
   done
+#echo WAIT
   trap "{ kill -SIGKILL $pid ; exit 0; }" SIGINT
   wait
 }
@@ -396,7 +391,6 @@ which realpath > /dev/null || realpath() {
 #--------------------------------------
 # Args
 #--------------------------------------
-
 CONF=""
 ARGS="$@"
 while [ $# -gt 0 ]; do
@@ -464,7 +458,7 @@ SSH_OPT="-oBatchMode=yes$SSH_OPT"
 #
 # Rsync options
 #
-[ "$VERBOSE" -gt 0 ] && RSYNC_OPT="$RSYNC_OPT $(seq $VERBOSE | xargs -n1 -IZ echo -v)"
+[ "$VERBOSE" -gt 0 ] && RSYNC_OPT="$RSYNC_OPT $(seq $VERBOSE | xargs -IZ echo -v)"
 
 [ "$NICE" = "0" ] && NICE=""
 [ -n "$NICE" ] && RSYNC_OPT="$RSYNC_OPT --rsync-path='nice -n $NICE rsync'"
@@ -534,6 +528,10 @@ fi
 #--------------------------------------
 # MAIN
 #--------------------------------------
+
+# Must be >1 or endless loop
+[ -n "$PARALLEL" -a "$PARALLEL" -gt 1 ] || PARALLEL=2
+
 if [ -z "$BACKUP_DIR" ]; then
   echo "$NAME: variable BACKUP_DIR is empty. Please use --backup-dir DIR. or --conf FILE|DIR" 1>&2
   exit 1
@@ -550,6 +548,10 @@ for s in $SERVERS; do
   cmds="$cmds \"backup_dirs $s\""
 
 done
+# NB 04.01.23 para=""
+# NB 04.01.23 cmds='"echo pi" "echo macbook" "echo piz"'
+# NB 04.01.23 eval parallelize $cmds
+# NB 04.01.23 exec echo "$cmds"
 
 echo "-------------------------------------------"
 echo "- Start: $(date +'%F %T'), $count_server servers, $PARALLEL parallel, $CONN_TIMEOUT sec conn timeout, $RUN_TIMEOUT sec run timeout"
