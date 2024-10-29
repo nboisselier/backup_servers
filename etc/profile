@@ -14,8 +14,8 @@ backup_servers_post_logs() {
     nb_api_post_host_info backup_servers.$host.files_total "$files_total"
     nb_api_post_host_info backup_servers.$host.bytes_transfer "$bytes_transfer"
     nb_api_post_host_info backup_servers.$host.bytes_total "$bytes_total"
-    nb_api_post_host_info backup_servers.$host.time "$time"
     nb_api_post_host_info backup_servers.$host.dirs "$dirs"
+    nb_api_post_host_info backup_servers.$host.time "$time"
   done
 }
 
